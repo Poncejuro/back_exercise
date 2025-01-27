@@ -1,19 +1,30 @@
 import psycopg2
 from psycopg2 import sql
 import os
+from dotenv import load_dotenv 
+
+load_dotenv()
 
 def create_table():
-    # Conexión a la base de datos PostgreSQL
     conn = psycopg2.connect(
-        dbname=os.environ.get("POSTGRES_DB", "inventory"),
-        user=os.environ.get("POSTGRES_USER", "admin"),
-        password=os.environ.get("POSTGRES_PASSWORD", "abc123"),
-        host=os.environ.get("POSTGRES_HOST", "localhost"),
-        port=os.environ.get("POSTGRES_PORT", 5432)
+        dbname=os.environ.get("POSTGRES_DB"),
+        user=os.environ.get("POSTGRES_USER"),
+        password=os.environ.get("POSTGRES_PASSWORD"),
+        host=os.environ.get("POSTGRES_HOST"),
+        port=os.environ.get("POSTGRES_PORT")
     )
     cursor = conn.cursor()
 
-    # Crear la tabla si no existe
+    create_schema_query = """
+    CREATE SCHEMA IF NOT EXISTS inventory;
+    """
+    cursor.execute(create_schema_query)
+    
+    set_schema_query = """
+    SET search_path TO inventory;
+    """
+    cursor.execute(set_schema_query)
+    
     create_table_query = """
     CREATE TABLE IF NOT EXISTS products (
         id SERIAL PRIMARY KEY,
