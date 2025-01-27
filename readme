@@ -1,0 +1,4 @@
+# create env
+# .\env\Scripts\activate 
+# install
+# docker-compose up
