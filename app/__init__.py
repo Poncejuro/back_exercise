@@ -1,22 +1,28 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
-import os
-from app.postgres.init_db import create_table
+from flask_jwt_extended import JWTManager
+from app.extensions import db
+from app.models.products import Product
+from app.config import Config
+from app.controllers.products_controller import product_routes
+from app.controllers.auth_controller import auth_routes
+from app.middlewares.authentication import jwt_error_handler
+from app.middlewares.error_handler import error_handler
 
 
-load_dotenv()
-db = SQLAlchemy()
-
-def create_app():
+def create_app(config_object=Config):
     app = Flask(__name__)
-
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-
+    app.config.from_object(config_object)
+    
+    JWTManager(app)
+    jwt_error_handler(app)
+    error_handler(app)
+    
     db.init_app(app)
+    
     with app.app_context():
-        create_table()
+        db.create_all()
+        
+    app.register_blueprint(product_routes, url_prefix='/api')
+    app.register_blueprint(auth_routes, url_prefix='/api')
 
     return app
